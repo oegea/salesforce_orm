@@ -187,7 +187,7 @@
 
 					//Iteramos los registros que ha retornado la query
 					for (let i in result.records){
-						let recordInstance = this.InstanceExistentObject(modelName, result.records[i]);
+						let recordInstance = this.instanceExistentObject(modelName, result.records[i]);
 						readyResult.push(recordInstance);
 					}
 
@@ -231,7 +231,7 @@
 		 * @return {Object} 				Objeto de Salesforce instanciado
 		 */
 		instanceExistentObject(name, existentObject){
-			let objectInstance = this.InstanceNewObject(name);
+			let objectInstance = this.instanceNewObject(name);
 			//Añadimos a esta nueva instancia, el objeto que nos han pasado
 			for (let key in existentObject){
 				objectInstance[key] = existentObject[key];
