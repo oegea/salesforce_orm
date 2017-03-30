@@ -13,7 +13,7 @@ This library is going to manage these things for you:
 
 ## Code Example
 
-###Initializing
+### Initializing
 First step is loading and initializing the library:
 
 ```javascript
@@ -26,7 +26,7 @@ let wsdlPath = __dirname+'/config/production.wsdl.xml';
 let salesforce = new Salesforce(username, password, token, wsdlPath);
 ```
 
-###Adding new model
+### Adding new model
 salesforce_orm needs to know with which Salesforce objects are you gonna to work, and which fields are part of that objects, so you will need to add those models following this example:
 
 ```javascript
@@ -36,7 +36,7 @@ this.salesforce.addModel({
 });
 ```
 
-##Creating new object instance
+### Creating new object instance
 
 Before start creating, updating, or removing records, you need to create a new model instance. The following example shows how to do it:
 
@@ -49,14 +49,14 @@ Also, if you previously have a Javascript object with all record's data, you can
 let existentObjectInstance = salesforce.instanceExistentObject('Account',{Id: '1234567890123456'}); //Here you can pass any model's properties
 ```
 
-###Retrieve records
+### Retrieve records
 ```javascript
 existentObjectInstance.get().then(()=>{
 	console.log(`Hello world! My name is ${existentObjectInstance.Name}`);
 });
 ```
 
-###Create records
+### Create records
 ```javascript
 newObjectInstance.Name = 'My awesome new account';
 newObjectInstance.create().then(()=>{
@@ -64,21 +64,21 @@ newObjectInstance.create().then(()=>{
 });
 ```
 
-###Update records
+### Update records
 ```javascript
 existentObjectInstance.Name = `${existentObjectInstance.Name} (edited)`;
 existentObjectInstance.update().then(()=>{
 	console.log(`Oh! My existent account has been edited and its name is now ${existentObjectInstance.Name}`);
 });
 ```
-###Remove records
+### Remove records
 ```javascript
 existentObjectInstance.remove().then(()=>{
   console.log(`I'm so sad D=, an account has been removed from Salesforce.`);
 });
 ```
 
-###Search records
+### Search records
 ```javascript
 salesforce.search("Account", "Name LIKE = 'My awesome new account'").then((records)=>{
   console.log(`${records.length} records have been found.`);
@@ -93,4 +93,4 @@ salesforce.search("Account", "Name LIKE = 'My awesome new account'").then((recor
 });
 ```
 
-##Hakuna Matata!
+## Hakuna Matata!
