@@ -121,7 +121,7 @@
 		 * @param  {Object} result  Resultados retornados por la query
 		 */
 		_onQuery(promise, error, result){
-			promise.resolve(error, result);
+			promise.resolve({error: error, result: result});
 		}
 
 		/**
