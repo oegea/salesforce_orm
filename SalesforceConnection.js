@@ -72,7 +72,7 @@
 		 */
 		_connectionStatus(){
 			//Si soapClient es null o el timestamp indica que es necesario reloguear, no estamos conectados
-			if (soapClient === null || nextLoginStamp <= new Date.now()){
+			if (this.soapClient === null || this.nextLoginStamp <= Date.now()){
 				return false;
 			}else{
 				return true;

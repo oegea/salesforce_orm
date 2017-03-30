@@ -27,7 +27,7 @@
 			this.wsdl      = wsdl;
 
 			//Generamos un gestor de conexión a Salesforce
-			this.connexion = new this.SalesforceConnection(username, password, token, wsdl);
+			this.connection = new this.SalesforceConnection(username, password, token, wsdl);
 
 			//Variable en la que se almacenarán los modelos de datos existentes
 			this.models    = [];
@@ -77,9 +77,62 @@
 		
 		//Búsqueda de datos en Salesforce:
 		
-		search(){
-			console.error("This functionality is still under development.");
-			return;
+		search(modelName, where, selectFields){
+			//Generamos la promesa a devolver
+			let promise = this.Q.defer();
+
+			//Obtenemos la descripción del objeto
+			const modelDescription = this._getModel(modelName);
+
+			//Preparación de la conexión
+			this.connection.prepare().then(this._onPrepareSearch.bind(this, promise, modelDescription, where, selectFields));
+
+			//Retornamos la promesa
+			return promise.promise; 
+		}
+
+		_onPrepareSearch(promise, modelDescription, where, selectFields){
+			if (selectFields === undefined)
+				selectFields = [];
+
+			let query = this._getSearchQuery(modelDescription, where, selectFields);
+			let formattedQuery = this.connection.soapSalesforce.FormatQuery(query);
+
+			this.connection.soapClient.queryAll(formattedQuery, this._onSearch.bind(this, promise, modelDescription.name));
+		}
+
+		_onSearch(promise, modelName, error, result){
+			try{
+				//Des-encapsulamos el resultado
+				result = result.result;
+				//Si no ha habido éxito
+				if (result.done !== true){
+					//Rechazamos la promesa
+					promise.reject();
+				}else{
+					
+					//En esta variable guardaremos los registros que retornaremos en la promesa
+					let readyResult = [];
+
+					//Iteramos los registros que ha retornado la query
+					for (let i in result.records){
+						let recordInstance = this.InstanceExistentObject(modelName, result.records[i]);
+						readyResult.push(recordInstance);
+					}
+
+					//Resolvemos la promesa
+					promise.resolve(readyResult);
+				}
+			}catch(exception){
+				promise.reject();
+			}
+			
+		}
+
+		_getSearchQuery(modelDescription, where, additionalSelectFields){
+			//Generamos la query de búsqueda
+			const query = `SELECT ${modelDescription.fields.join(', ')} ${additionalSelectFields.join(', ')} FROM ${modelDescription.name} WHERE ${where}`;
+			return query;
 		}
 		
 		//Crear una instancia de objeto:
@@ -90,7 +143,7 @@
 		 */
 		InstanceNewObject(name){
 			let objectDescription = this._getModel(name);
-			return new this.SalesforceObject(this.connection, objectDescription);
+			return new this.SalesforceObject(objectDescription, this.connection);
 		}
 
 		/**
@@ -100,7 +153,7 @@
 		 * @return {Object} 				Objeto de Salesforce instanciado
 		 */
 		InstanceExistentObject(name, existentObject){
-			let objectInstance = this.newObject(name);
+			let objectInstance = this.InstanceNewObject(name);
 			//Añadimos a esta nueva instancia, el objeto que nos han pasado
 			for (let key in existentObject){
 				objectInstance[key] = existentObject[key];
