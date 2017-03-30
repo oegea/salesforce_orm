@@ -1,13 +1,29 @@
 {
   "name": "salesforce_orm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A library for connecting to the Salesforce Enterprise SOAP API and do all operations in a simplified way.",
   "main": "SalesforceORM.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oegea/salesforce_orm.git"
+  },
   "keywords": [
-    "Salesforce"
+    "salesforce",
+    "soap",
+    "api",
+    "integration",
+    "wsdl",
+    "enterprise",
+    "login",
+    "query",
+    "orm",
+    "mongodb",
+    "nosql",
+    "easy",
+    "object"
   ],
   "author": "Oriol Egea",
   "license": "AGPL-3.0",

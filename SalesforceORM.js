@@ -77,6 +77,13 @@
 		
 		//Búsqueda de datos en Salesforce:
 		
+		/**
+		 * Empieza una búsqueda en Salesforce
+		 * @param  {String} modelName    Nombre del modelo a utilizar en la búsqueda
+		 * @param  {String} where        Cláusulas de filtrado (SOQL) a utilizar en la búsqueda
+		 * @param  {Object} selectFields Campos adicionales que quieren recuperarse en la búsqueda
+		 * @return {Object}              Promesa resuelta al finalizar la búsqueda
+		 */
 		search(modelName, where, selectFields){
 			//Generamos la promesa a devolver
 			let promise = this.Q.defer();
@@ -91,6 +98,13 @@
 			return promise.promise; 
 		}
 
+		/**
+		 * Recibe el resultado de preparar la conexión antes de empezar la búsqueda en Salesforce
+		 * @param  {Object} promise          Promesa a resolver al finalizar la búsqueda
+		 * @param  {Object} modelDescription Nombre y campos del modelo sobre el que estamos buscando
+		 * @param  {String} where            Cláusulas de búsqueda a incluir en la query de búsqueda
+		 * @param  {Object} selectFields     Campos adicionales que quieren recuperarse en la búsqueda, además de los incluídos en la descripción del modelo
+		 */
 		_onPrepareSearch(promise, modelDescription, where, selectFields){
 			if (selectFields === undefined)
 				selectFields = [];
@@ -101,6 +115,13 @@
 			this.connection.soapClient.queryAll(formattedQuery, this._onSearch.bind(this, promise, modelDescription.name));
 		}
 
+		/**
+		 * Recibe el resultado de una búsqueda
+		 * @param  {Object} promise   Promesa a resolver al finalizar, indicando los registros que la búsqueda ha retornado
+		 * @param  {String} modelName Nombre del modelo sobre el que estamos buscando
+		 * @param  {Object} error     Posibles errores ocurridos durante la búsqueda
+		 * @param  {Object} result    Registros y resultados de la búsqueda
+		 */
 		_onSearch(promise, modelName, error, result){
 			try{
 				//Des-encapsulamos el resultado
@@ -129,6 +150,13 @@
 			
 		}
 
+		/**
+		 * Genera una query SOQL para realizar una búsqueda de un objeto
+		 * @param  {Object} modelDescription       Nombre y campos del modelo sobre el que estamos buscando
+		 * @param  {String} where                  Cláusulas de filtrado sobre las que queremos realizar la búsqueda
+		 * @param  {Object} additionalSelectFields Campos adicionales, además de los del propio modelo, que queremos recuperar
+		 * @return {String}                        Query SOQL a ejecutar para llevar a cabo la búsqueda
+		 */
 		_getSearchQuery(modelDescription, where, additionalSelectFields){
 			//Generamos la query de búsqueda
 			const query = `SELECT ${modelDescription.fields.join(', ')} ${additionalSelectFields.join(', ')} FROM ${modelDescription.name} WHERE ${where}`;
@@ -141,7 +169,7 @@
 		 * @param  {String} name Nombre del objeto
 		 * @return {Object}      Objeto de Salesforce instanciado
 		 */
-		InstanceNewObject(name){
+		instanceNewObject(name){
 			let objectDescription = this._getModel(name);
 			return new this.SalesforceObject(objectDescription, this.connection);
 		}
@@ -152,7 +180,7 @@
 		 * @param  {Object} existentObject 	Objeto con los campos de Salesforce definidos
 		 * @return {Object} 				Objeto de Salesforce instanciado
 		 */
-		InstanceExistentObject(name, existentObject){
+		instanceExistentObject(name, existentObject){
 			let objectInstance = this.InstanceNewObject(name);
 			//Añadimos a esta nueva instancia, el objeto que nos han pasado
 			for (let key in existentObject){
