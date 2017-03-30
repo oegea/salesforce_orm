@@ -80,7 +80,7 @@ existentObjectInstance.remove().then(()=>{
 
 ### Search records
 ```javascript
-salesforce.search("Account", "Name LIKE = 'My awesome new account'").then((records)=>{
+salesforce.search("Account", "Name = 'My awesome new account'").then((records)=>{
 	console.log(`${records.length} records have been found.`);
 	for(let i in records){
 		let record = records[i];
