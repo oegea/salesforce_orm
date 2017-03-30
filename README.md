@@ -31,8 +31,8 @@ salesforce_orm needs to know with which Salesforce objects are you gonna to work
 
 ```javascript
 this.salesforce.addModel({
-		name: 'Account',
-		fields: ["Id", "Name"] //Add here all API Names of Account fields
+	name: 'Account',
+	fields: ["Id", "Name"] //Add here all API Names of Account fields
 });
 ```
 
@@ -74,22 +74,22 @@ existentObjectInstance.update().then(()=>{
 ### Remove records
 ```javascript
 existentObjectInstance.remove().then(()=>{
-  console.log(`I'm so sad D=, an account has been removed from Salesforce.`);
+	console.log(`I'm so sad D=, an account has been removed from Salesforce.`);
 });
 ```
 
 ### Search records
 ```javascript
 salesforce.search("Account", "Name LIKE = 'My awesome new account'").then((records)=>{
-  console.log(`${records.length} records have been found.`);
-  for(let i in records){
-    let record = records[i];
-    console.log(`${record.Name} found! (${record.Id})`);
+	console.log(`${records.length} records have been found.`);
+	for(let i in records){
+		let record = records[i];
+		    console.log(`${record.Name} found! (${record.Id})`);
     
-    //And here magic happens... Feel free to use all available methods (as delete or update) with these results...
-    record.Name = 'Changed name';
-    record.update();
-  }
+		    //And here magic happens... Feel free to use all available methods (as delete or update) with these results...
+		    record.Name = 'Changed name';
+		    record.update();
+	  }
 });
 ```
 
