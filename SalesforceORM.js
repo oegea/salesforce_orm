@@ -77,6 +77,62 @@
 		
 		//Búsqueda de datos en Salesforce:
 		
+
+		/**
+		 * Prepara la conexión con Salesforce antes de realizar ninguna operación
+		 * @param  {Function} callback Función a ejecutar una vez se haya establecido la conexión
+		 * @return {Object}            Promesa que será resuelta una vez la operación que estamos preparando finalice
+		 */
+		_prepareConnection(callback){
+			//Generamos la promesa a devolver
+			let promise = this.Q.defer();
+
+			//Preparación de la conexión
+			this.connection.prepare().then(callback.bind(this, promise));
+
+			//Retornamos la promesa
+			return promise.promise; 
+		}
+
+		/**
+		 * Realiza una query a Salesforce
+		 * @param  {String} query Sentencia SOQL
+		 * @return {Object}       Promesa a devolver al finalizar la sentencia
+		 */
+		query(query){
+			return this._prepareConnection(this.__onPrepareQuery.bind(this, query));
+		}
+
+		/**
+		 * Recibe el resultado de comprobar la conexión con SOAP API antes de realizar la consulta a Salesforce
+		 * @param  {String} query   Sentencia a ejecutar
+		 * @param  {Object} promise Promesa a resolver al finalizar la query
+		 */
+		__onPrepareQuery(query, promise){
+			let formattedQuery = this.connection.soapSalesforce.FormatQuery(query);
+
+			this.connection.soapClient.queryAll(formattedQuery, this._onQuery.bind(this, promise));
+		}
+
+		/**
+		 * Recibe el resultado de la query, y la retorna al resolver la promesa
+		 * @param  {Object} promise Promesa a resolver
+		 * @param  {Object} error   Posibles errores ocurridos durante la ejecución de la query
+		 * @param  {Object} result  Resultados retornados por la query
+		 */
+		_onQuery(promise, error, result){
+			promise.resolve(error, result);
+		}
+
+		/**
+		 * Escapa un texto para poder ser insertado en una sentencia SOQL
+		 * @param  {String} textToEscape Texto a escapar
+		 * @return {String}              Texto ya escapado
+		 */
+		escape(textToEscape){
+			return this.connection.soapSalesforce.EscapeSOQL(textToEscape);
+		}
+
 		/**
 		 * Empieza una búsqueda en Salesforce
 		 * @param  {String} modelName    Nombre del modelo a utilizar en la búsqueda
@@ -85,27 +141,21 @@
 		 * @return {Object}              Promesa resuelta al finalizar la búsqueda
 		 */
 		search(modelName, where, selectFields){
-			//Generamos la promesa a devolver
-			let promise = this.Q.defer();
 
 			//Obtenemos la descripción del objeto
 			const modelDescription = this._getModel(modelName);
 
-			//Preparación de la conexión
-			this.connection.prepare().then(this._onPrepareSearch.bind(this, promise, modelDescription, where, selectFields));
-
-			//Retornamos la promesa
-			return promise.promise; 
+			return this._prepareConnection(this._onPrepareSearch.bind(this, modelDescription, where, selectFields));
 		}
 
 		/**
 		 * Recibe el resultado de preparar la conexión antes de empezar la búsqueda en Salesforce
-		 * @param  {Object} promise          Promesa a resolver al finalizar la búsqueda
 		 * @param  {Object} modelDescription Nombre y campos del modelo sobre el que estamos buscando
 		 * @param  {String} where            Cláusulas de búsqueda a incluir en la query de búsqueda
 		 * @param  {Object} selectFields     Campos adicionales que quieren recuperarse en la búsqueda, además de los incluídos en la descripción del modelo
+		 * @param  {Object} promise          Promesa a resolver al finalizar la búsqueda
 		 */
-		_onPrepareSearch(promise, modelDescription, where, selectFields){
+		_onPrepareSearch(modelDescription, where, selectFields, promise){
 			if (selectFields === undefined)
 				selectFields = [];
 
