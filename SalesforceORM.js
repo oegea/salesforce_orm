@@ -208,8 +208,10 @@
 		 * @return {String}                        Query SOQL a ejecutar para llevar a cabo la búsqueda
 		 */
 		_getSearchQuery(modelDescription, where, additionalSelectFields){
+			//Fusionamos en un único array todos los campos a buscar
+			const selectFields = [... modelDescription.fields, ...additionalSelectFields];
 			//Generamos la query de búsqueda
-			const query = `SELECT ${modelDescription.fields.join(', ')} ${additionalSelectFields.join(', ')} FROM ${modelDescription.name} WHERE ${where}`;
+			const query = `SELECT ${selectFields.join(', ')} FROM ${modelDescription.name} WHERE ${where}`;
 			return query;
 		}
 		
