@@ -141,11 +141,13 @@
 		 * @return {Object}              Promesa resuelta al finalizar la búsqueda
 		 */
 		search(modelName, where, selectFields){
-
-			//Obtenemos la descripción del objeto
-			const modelDescription = this._getModel(modelName);
-
-			return this._prepareConnection(this._onPrepareSearch.bind(this, modelDescription, where, selectFields));
+			try {
+				//Obtenemos la descripción del objeto
+				const modelDescription = this._getModel(modelName);
+				return this._prepareConnection(this._onPrepareSearch.bind(this, modelDescription, where, selectFields));
+			}catch(err){
+			  console.log("ERROR ON SEARCH FUNCTION: "+err);
+			}
 		}
 
 		/**
@@ -158,11 +160,24 @@
 		_onPrepareSearch(modelDescription, where, selectFields, promise){
 			if (selectFields === undefined)
 				selectFields = [];
+			try {
+				let query = this._getSearchQuery(modelDescription, where, selectFields);
+				let formattedQuery = this.connection.soapSalesforce.FormatQuery(query);
+				this.connection.soapClient.queryAll(formattedQuery, this._onSearch.bind(this, promise, modelDescription.name));
+			}catch(err){
+			 	console.log("ERROR ON ON_PREPARE SEARCH FUNCTION:"+err);
+			}
+		}
 
-			let query = this._getSearchQuery(modelDescription, where, selectFields);
-			let formattedQuery = this.connection.soapSalesforce.FormatQuery(query);
+		_queryMore(queryLocator){
+			var promise = this.Q.defer();
+			//Preparación de la conexión
+			this.connection.soapClient.queryMore({queryLocator}, this._onQueryMore.bind(this, promise));
+			return promise.promise;
+		}
 
-			this.connection.soapClient.queryAll(formattedQuery, this._onSearch.bind(this, promise, modelDescription.name));
+		_onQueryMore(promise, error, result){
+			promise.resolve(result.result);
 		}
 
 		/**
@@ -172,19 +187,50 @@
 		 * @param  {Object} error     Posibles errores ocurridos durante la búsqueda
 		 * @param  {Object} result    Registros y resultados de la búsqueda
 		 */
-		_onSearch(promise, modelName, error, result){
+		async _onSearch(promise, modelName, error, result){
 			try{
+				let done = false;
+				let index = 0;
+				
 				//Des-encapsulamos el resultado
 				result = result.result;
+
+				//En esta variable guardaremos los registros que retornaremos en la promesa
+				let readyResult = [];
+
+				while(!done){
+					if(
+						(result) &&
+						(
+							(result.done != true) || 
+							(result.done == true && index == 0)
+						)
+					){
+						if(index > 0){
+				
+							result = await this._queryMore(result.queryLocator);
+						}
+						index++;
+
+						if(result){
+							for(let i in result.records){
+								let recordInstance = this.instanceExistentObject(modelName, result.records[i]);
+								readyResult.push(recordInstance);
+							}
+						}
+					}else{
+						done = true;
+					}
+				}
+
+				//Resolvemos la promesa
+				promise.resolve(readyResult);
+
 				//Si no ha habido éxito
-				if (result.done !== true){
+				/*if (result.done !== true){
 					//Rechazamos la promesa
 					promise.reject();
 				}else{
-					
-					//En esta variable guardaremos los registros que retornaremos en la promesa
-					let readyResult = [];
-
 					//Iteramos los registros que ha retornado la query
 					for (let i in result.records){
 						let recordInstance = this.instanceExistentObject(modelName, result.records[i]);
@@ -193,8 +239,9 @@
 
 					//Resolvemos la promesa
 					promise.resolve(readyResult);
-				}
+				}*/
 			}catch(exception){
+				console.log("ERROR ON ON_SEARCH FUNCTION:"+exception);
 				promise.reject();
 			}
 			
